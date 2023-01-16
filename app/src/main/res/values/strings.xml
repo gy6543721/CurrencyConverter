@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Currency Converter</string>
+    <string name="dialog_alert_title">Error</string>
+    <string name="trail_icon_text">Clear Text</string>
 </resources>
