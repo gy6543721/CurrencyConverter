@@ -4,10 +4,12 @@ import levilin.currencyconverter.model.CurrencyItem
 
 class ConstantValue {
     companion object {
-        const val BASE_URL = "https://openexchangerates.org"
-        const val API_ID = "d48eb6414d6e4d35b7b13929643f08e8"
+        const val BASE_URL = "https://openexchangerates.org/"
+        const val APP_ID = "d48eb6414d6e4d35b7b13929643f08e8"
 
         val CURRENCY_LIST = listOf(
+            CurrencyItem("United Arab Emirates Dirham", "AED"),
+            CurrencyItem("Afghan Afghani", "AFN"),
             CurrencyItem("Australia", "AUD"),
             CurrencyItem("Brazil", "BRL"),
             CurrencyItem("Bulgaria", "BGN"),

@@ -27,7 +27,7 @@ data class Rates(
     @SerializedName("BAM")
     val bAM: Double,
     @SerializedName("BBD")
-    val bBD: Int,
+    val bBD: Double,
     @SerializedName("BDT")
     val bDT: Double,
     @SerializedName("BGN")
@@ -37,7 +37,7 @@ data class Rates(
     @SerializedName("BIF")
     val bIF: Double,
     @SerializedName("BMD")
-    val bMD: Int,
+    val bMD: Double,
     @SerializedName("BND")
     val bND: Double,
     @SerializedName("BOB")
@@ -45,7 +45,7 @@ data class Rates(
     @SerializedName("BRL")
     val bRL: Double,
     @SerializedName("BSD")
-    val bSD: Int,
+    val bSD: Double,
     @SerializedName("BTC")
     val bTC: Double,
     @SerializedName("BTN")
@@ -75,7 +75,7 @@ data class Rates(
     @SerializedName("CRC")
     val cRC: Double,
     @SerializedName("CUC")
-    val cUC: Int,
+    val cUC: Double,
     @SerializedName("CUP")
     val cUP: Double,
     @SerializedName("CVE")
@@ -93,7 +93,7 @@ data class Rates(
     @SerializedName("EGP")
     val eGP: Double,
     @SerializedName("ERN")
-    val eRN: Int,
+    val eRN: Double,
     @SerializedName("ETB")
     val eTB: Double,
     @SerializedName("EUR")
@@ -141,7 +141,7 @@ data class Rates(
     @SerializedName("IQD")
     val iQD: Double,
     @SerializedName("IRR")
-    val iRR: Int,
+    val iRR: Double,
     @SerializedName("ISK")
     val iSK: Double,
     @SerializedName("JEP")
@@ -153,7 +153,7 @@ data class Rates(
     @SerializedName("JPY")
     val jPY: Double,
     @SerializedName("KES")
-    val kES: Int,
+    val kES: Double,
     @SerializedName("KGS")
     val kGS: Double,
     @SerializedName("KHR")
@@ -161,7 +161,7 @@ data class Rates(
     @SerializedName("KMF")
     val kMF: Double,
     @SerializedName("KPW")
-    val kPW: Int,
+    val kPW: Double,
     @SerializedName("KRW")
     val kRW: Double,
     @SerializedName("KWD")
@@ -225,7 +225,7 @@ data class Rates(
     @SerializedName("OMR")
     val oMR: Double,
     @SerializedName("PAB")
-    val pAB: Int,
+    val pAB: Double,
     @SerializedName("PEN")
     val pEN: Double,
     @SerializedName("PGK")
@@ -255,7 +255,7 @@ data class Rates(
     @SerializedName("SCR")
     val sCR: Double,
     @SerializedName("SDG")
-    val sDG: Int,
+    val sDG: Double,
     @SerializedName("SEK")
     val sEK: Double,
     @SerializedName("SGD")
@@ -263,7 +263,7 @@ data class Rates(
     @SerializedName("SHP")
     val sHP: Double,
     @SerializedName("SLL")
-    val sLL: Int,
+    val sLL: Double,
     @SerializedName("SOS")
     val sOS: Double,
     @SerializedName("SRD")
@@ -297,13 +297,13 @@ data class Rates(
     @SerializedName("TWD")
     val tWD: Double,
     @SerializedName("TZS")
-    val tZS: Int,
+    val tZS: Double,
     @SerializedName("UAH")
     val uAH: Double,
     @SerializedName("UGX")
     val uGX: Double,
     @SerializedName("USD")
-    val uSD: Int,
+    val uSD: Double,
     @SerializedName("UYU")
     val uYU: Double,
     @SerializedName("UZS")
@@ -341,5 +341,5 @@ data class Rates(
     @SerializedName("ZMW")
     val zMW: Double,
     @SerializedName("ZWL")
-    val zWL: Int
+    val zWL: Double
 )

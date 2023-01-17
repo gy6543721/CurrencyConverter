@@ -2,7 +2,7 @@ package levilin.currencyconverter.model
 
 import com.google.gson.annotations.SerializedName
 
-data class CurrencyAbbreviation(
+data class CurrencyCode(
     @SerializedName("AED")
     val aED: String,
     @SerializedName("AFN")
