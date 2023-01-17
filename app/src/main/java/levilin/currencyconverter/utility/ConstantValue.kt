@@ -8,9 +8,8 @@ class ConstantValue {
         const val APP_ID = "d48eb6414d6e4d35b7b13929643f08e8"
 
         val CURRENCY_LIST = listOf(
-            CurrencyItem("United Arab Emirates Dirham", "AED"),
-            CurrencyItem("Afghan Afghani", "AFN"),
             CurrencyItem("Australia", "AUD"),
+            CurrencyItem("BitCoin", "BTC"),
             CurrencyItem("Brazil", "BRL"),
             CurrencyItem("Bulgaria", "BGN"),
             CurrencyItem("Canada", "CAD"),
@@ -40,6 +39,7 @@ class ConstantValue {
             CurrencyItem("South Africa", "ZAR"),
             CurrencyItem("Sweden", "SEK"),
             CurrencyItem("Switzerland", "CHF"),
+            CurrencyItem("Taiwan", "TWD"),
             CurrencyItem("Thailand", "THB"),
             CurrencyItem("Turkey", "TRY"),
             CurrencyItem("United States", "USD"),

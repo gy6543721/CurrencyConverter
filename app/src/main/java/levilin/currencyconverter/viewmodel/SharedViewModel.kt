@@ -19,7 +19,6 @@ import javax.inject.Inject
 @HiltViewModel
 class SharedViewModel @Inject constructor(private val repository: Repository, application: Application): AndroidViewModel(application) {
     var currencyCodeResponse: MutableLiveData<NetworkResult<CurrencyCode>> = MutableLiveData()
-    var currencyExchangeRateResponseFree: MutableLiveData<NetworkResult<CurrencyExchangeRate>> = MutableLiveData()
     var currencyExchangeRateResponse: MutableLiveData<NetworkResult<CurrencyExchangeRate>> = MutableLiveData()
 
     var currencyItemList: List<CurrencyCode> = ArrayList()
@@ -43,13 +42,6 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
         }
     }
 
-    fun getCurrencyExchangeRateFree(app_id: String) {
-        viewModelScope.launch {
-            getCurrencyExchangeRateFreeSafeCall(app_id = app_id)
-            Log.d("TAG", "getCurrencyExchangeRateFree executed")
-        }
-    }
-
     fun getCurrencyExchangeRate(queries: Map<String, String>) {
         viewModelScope.launch {
             getCurrencyExchangeRateSafeCall(queries = queries)
@@ -65,30 +57,14 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
                 currencyCodeResponse.value = handleCurrencyCodeResponse(response = response)
 
             } catch (e: Exception) {
-                currencyCodeResponse.value = NetworkResult.Error(message = "No Response")
+                currencyCodeResponse.value = NetworkResult.Error(message = repository.dataSource.getCurrencyCode().code().toString())
             }
         } else {
             currencyCodeResponse.value = NetworkResult.Error(message = "No Internet Connection")
         }
 
-        Log.d("TAG", "CCR Value: ${currencyCodeResponse.value?.data?.aED.toString()}")
+        Log.d("TAG", "CCR Value: ${currencyCodeResponse.value?.data?.toString()}")
     }
-
-    private suspend fun getCurrencyExchangeRateFreeSafeCall(app_id: String) {
-        if (checkInternetConnection()) {
-            try {
-                val response = repository.dataSource.getCurrencyExchangeRateFree(app_id = app_id)
-                Log.d("TAG", "getCurrencyExchangeRateFreeSafeCall Response: ${response.code()}")
-                currencyExchangeRateResponseFree.value = handleCurrencyExchangeRateFreeResponse(response = response)
-
-            } catch (e: Exception) {
-                currencyExchangeRateResponseFree.value = NetworkResult.Error(message = "No Response")
-            }
-        } else {
-            currencyExchangeRateResponseFree.value = NetworkResult.Error(message = "No Internet Connection")
-        }
-    }
-
 
     private suspend fun getCurrencyExchangeRateSafeCall(queries: Map<String, String>) {
         if (checkInternetConnection()) {
@@ -97,7 +73,7 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
                 Log.d("TAG", "getCurrencyExchangeRateSafeCall Response: ${response.code()}")
                 currencyExchangeRateResponse.value = handleCurrencyExchangeRateResponse(response = response)
             } catch (e: Exception) {
-                currencyExchangeRateResponse.value = NetworkResult.Error(message = "No Response")
+                currencyExchangeRateResponse.value = NetworkResult.Error(message = e.localizedMessage)
             }
         } else {
             currencyExchangeRateResponse.value = NetworkResult.Error(message = "No Internet Connection")
@@ -114,22 +90,7 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
                 NetworkResult.Success(data = currencyCodeResponse!!)
             }
             else -> {
-                NetworkResult.Error(message = "Cannot Fetch Data Successfully")
-            }
-        }
-    }
-
-    private fun handleCurrencyExchangeRateFreeResponse(response: Response<CurrencyExchangeRate>): NetworkResult<CurrencyExchangeRate> {
-        return when {
-            response.message().toString().contains("timeout") -> {
-                NetworkResult.Error(message = "Time Out")
-            }
-            response.isSuccessful -> {
-                val currencyCodeResponse = response.body()
-                NetworkResult.Success(data = currencyCodeResponse!!)
-            }
-            else -> {
-                NetworkResult.Error(message = "Cannot Fetch Data Successfully")
+                NetworkResult.Error(message = response.message().toString())
             }
         }
     }
@@ -144,7 +105,7 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
                 NetworkResult.Success(data = currencyExchangeRayeResponse!!)
             }
             else -> {
-                NetworkResult.Error(message = "Cannot Fetch Data Successfully")
+                NetworkResult.Error(message = response.message().toString())
             }
         }
     }
