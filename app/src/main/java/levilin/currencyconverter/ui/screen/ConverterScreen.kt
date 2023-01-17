@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +26,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.launch
 import levilin.currencyconverter.R
+import levilin.currencyconverter.model.CurrencyItem
 import levilin.currencyconverter.model.Rates
 import levilin.currencyconverter.ui.theme.*
 import levilin.currencyconverter.utility.ConstantValue
@@ -62,6 +66,9 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
     val convertedValue = remember { mutableStateOf("") }
     val singleConvertedValue = remember { mutableStateOf("") }
 
+    var convertedValueList: ArrayList<String> = ArrayList(CURRENCY_LIST.size)
+    var singleConvertedValueList: ArrayList<String> = ArrayList(CURRENCY_LIST.size)
+
 //    sharedViewModel.getCurrencyCode()
 
     BottomSheetScaffold(
@@ -84,35 +91,71 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                                         queries = provideQueries(base = fromCurrencyCode.value)
                                     )
                                     sharedViewModel.currencyExchangeRateResponse.observe(context as LifecycleOwner) { networkResult ->
-
                                         when (networkResult) {
                                             is NetworkResult.Success -> {
                                                 networkResult.data?.let { currencyData ->
 
-                                                    Log.d("TAG", "currencyExchangeRate: ${currencyData.rates}")
+                                                    Log.d(
+                                                        "TAG",
+                                                        "currencyExchangeRate: ${currencyData.rates}"
+                                                    )
 
                                                     if (valueToConvert.value.isEmpty()) {
                                                         valueToConvert.value = "1.00"
                                                     }
-
-                                                    val currencyValue = convertByCurrencyCode(
-                                                        toCurrencyCode.value,
-                                                        currencyData.rates
-                                                    )
                                                     val valueToConvertDouble =
                                                         valueToConvert.value.toDouble()
+
+                                                    val fromCurrencyValue =
+                                                        convertRatesByCurrencyCode(
+                                                            fromCurrencyCode.value,
+                                                            currencyData.rates
+                                                        )
+
+                                                    val toCurrencyValue =
+                                                        convertRatesByCurrencyCode(
+                                                            toCurrencyCode.value,
+                                                            currencyData.rates
+                                                        )
+
                                                     convertedValue.value =
-                                                        "${formattedResult(valueToConvertDouble * currencyValue)} ${toCurrencyCode.value}"
+                                                        "${formattedResult(valueToConvertDouble * toCurrencyValue / fromCurrencyValue)} ${toCurrencyCode.value}"
+
                                                     singleConvertedValue.value =
-                                                        "1 ${fromCurrencyCode.value} = ${formattedResult(currencyValue)} ${toCurrencyCode.value}"
+                                                        "1 ${fromCurrencyCode.value} = ${
+                                                            formattedResult(
+                                                                toCurrencyValue / fromCurrencyValue
+                                                            )
+                                                        } ${toCurrencyCode.value}"
+
+                                                    Log.d(
+                                                        "TAG",
+                                                        "convertedValue: ${convertedValue.value}"
+                                                    )
+                                                    Log.d(
+                                                        "TAG",
+                                                        "singleConvertedValue: ${singleConvertedValue.value}"
+                                                    )
                                                 }
                                             }
                                             is NetworkResult.Error -> {
-                                                Toast.makeText(context, networkResult.message, Toast.LENGTH_SHORT).show()
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        networkResult.message,
+                                                        Toast.LENGTH_SHORT
+                                                    )
+                                                    .show()
                                                 Log.d("TAG", "Error: ${networkResult.message}")
                                             }
                                             is NetworkResult.Loading -> {
-                                                Toast.makeText(context, "Loading...", Toast.LENGTH_SHORT).show()
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        "Loading...",
+                                                        Toast.LENGTH_SHORT
+                                                    )
+                                                    .show()
                                             }
                                         }
                                     }
@@ -208,6 +251,8 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
             }
         }
 
+        val list = createDataList()
+
         // Grid View
         Column(
             modifier = Modifier
@@ -217,17 +262,92 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
             LazyVerticalGrid(
                 cells = GridCells.Adaptive(100.dp),
                 content = {
-                    items(9) { item ->
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .aspectRatio(1f)
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(MaterialTheme.colors.boxBackgroundColor),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(text = "$item")
-                        }
+                    items(list.size) { item ->
+
+                        GridItem(currencyItem = list[item], onItemClicked = {
+                            Toast.makeText(context, it.currencyCode, Toast.LENGTH_SHORT).show()
+                        })
+
+
+
+
+//                        Box(
+//                            modifier = Modifier
+//                                .padding(8.dp)
+//                                .aspectRatio(1f)
+//                                .clip(RoundedCornerShape(5.dp))
+//                                .background(MaterialTheme.colors.boxBackgroundColor),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            sharedViewModel.currencyExchangeRateResponse.observe(context as LifecycleOwner) { networkResult ->
+//                                when (networkResult) {
+//                                    is NetworkResult.Success -> {
+//                                        networkResult.data?.let { currencyData ->
+//
+//                                            Log.d(
+//                                                "TAG",
+//                                                "currencyExchangeRate: ${currencyData.rates}"
+//                                            )
+//
+//                                            if (valueToConvert.value.isEmpty()) {
+//                                                valueToConvert.value = "1.00"
+//                                            }
+//                                            val valueToConvertDouble =
+//                                                valueToConvert.value.toDouble()
+//
+//                                            val fromCurrencyValue =
+//                                                convertRatesByCurrencyCode(
+//                                                    fromCurrencyCode.value,
+//                                                    currencyData.rates
+//                                                )
+//
+//                                            val toCurrencyValue = convertRatesByCurrencyCode(
+//                                                convertCurrencyCodeByOrder(item),
+//                                                currencyData.rates
+//                                            )
+//
+//                                            convertedValueList[item] =
+//                                                "${formattedResult(valueToConvertDouble * toCurrencyValue / fromCurrencyValue)} ${toCurrencyCode.value}"
+//
+//                                            singleConvertedValueList[item] =
+//                                                "1 ${fromCurrencyCode.value} = ${formattedResult(toCurrencyValue / fromCurrencyValue)} ${toCurrencyCode.value}"
+//
+//                                            Log.d("TAG", "convertedValue ${item}: ${convertedValue.value}")
+//                                            Log.d("TAG", "singleConvertedValue ${item}: ${singleConvertedValue.value}")
+//
+//                                        }
+//                                    }
+//                                    is NetworkResult.Error -> {
+//                                        Toast
+//                                            .makeText(
+//                                                context,
+//                                                networkResult.message,
+//                                                Toast.LENGTH_SHORT
+//                                            )
+//                                            .show()
+//                                        Log.d("TAG", "Error: ${networkResult.message}")
+//                                    }
+//                                    is NetworkResult.Loading -> {
+//                                        Toast
+//                                            .makeText(
+//                                                context,
+//                                                "Loading...",
+//                                                Toast.LENGTH_SHORT
+//                                            )
+//                                            .show()
+//                                    }
+//                                }
+//                            }
+
+//                            val list = createDataList()
+//                            items(list.size) { index ->
+//                                GridItem(currencyItem = list[index], onItemClicked = {
+//                                    Toast.makeText(context, it.countryName, Toast.LENGTH_SHORT).show()
+//                                })
+//                            }
+//                        }
+
+
                     }
                 }
             )
@@ -235,11 +355,130 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
     }
 }
 
+@Composable
+private fun GridItem(currencyItem: CurrencyItem, onItemClicked:(currencyItem: CurrencyItem) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(4.dp)
+            .padding(8.dp)
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(5.dp))
+            .background(MaterialTheme.colors.boxBackgroundColor)
+            .clickable(
+                interactionSource = MutableInteractionSource(),
+                indication = rememberRipple(
+                    bounded = true,
+                    color = MaterialTheme.colors.boxBackgroundColor
+                ),
+                onClick = { onItemClicked(currencyItem) }
+            ),
+        backgroundColor = MaterialTheme.colors.boxBackgroundColor,
+        elevation = 12.dp,
+        shape = RoundedCornerShape(6.dp),
+    ) {
+        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(text = currencyItem.currencyCode)
+            Text(text = currencyItem.countryName)
+        }
+    }
+}
+
+private fun createDataList(): List<CurrencyItem> {
+    val list = mutableListOf<CurrencyItem>()
+
+    list.add(CurrencyItem("Australia", "AUD"))
+    list.add(CurrencyItem("BitCoin", "BTC"))
+    list.add(CurrencyItem("Brazil", "BRL"))
+    list.add(CurrencyItem("Bulgaria", "BGN"))
+
+    return list
+}
+
+
 fun formattedResult(value: Double): String {
     return "%.2f".format(value)
 }
 
-fun convertByCurrencyCode(currencyCode: String, rates: Rates): Double {
+fun convertOrderByCurrencyCode(currencyCode: String): Int {
+    return when(currencyCode) {
+        "AUD" -> 0
+        "BGN" -> 1
+        "BRL" -> 2
+        "CAD" -> 3
+        "CHF" -> 4
+        "CNY" -> 5
+        "CZK" -> 6
+        "DKK" -> 7
+        "EUR" -> 8
+        "GBP" -> 9
+        "HKD" -> 10
+        "HRK" -> 11
+        "HUF" -> 12
+        "IDR" -> 13
+        "INR" -> 14
+        "ISK" -> 15
+        "JPY" -> 16
+        "KRW" -> 17
+        "MXN" -> 18
+        "MYR" -> 19
+        "NOK" -> 20
+        "NZD" -> 21
+        "PHP" -> 22
+        "PLN" -> 23
+        "RON" -> 24
+        "RUB" -> 25
+        "SEK" -> 26
+        "SGD" -> 27
+        "THB" -> 28
+        "TRY" -> 29
+        "TWD" -> 30
+        "USD" -> 31
+        "ZAR" -> 32
+        else -> 33
+    }
+}
+
+fun convertCurrencyCodeByOrder(order: Int): String {
+    return when(order) {
+        0 -> "AUD"
+        1 -> "BGN"
+        2 -> "BRL"
+        3 -> "CAD"
+        4 -> "CHF"
+        5 -> "CNY"
+        6 -> "CZK"
+        7 -> "DKK"
+        8 -> "EUR"
+        9 -> "GBP"
+        10 -> "HKD"
+        11 -> "HRK"
+        12 -> "HUF"
+        13 -> "IDR"
+        14 -> "INR"
+        15 -> "ISK"
+        16 -> "JPY"
+        17 -> "KRW"
+        18 -> "MXN"
+        19 -> "MYR"
+        20 -> "NOK"
+        21 -> "NZD"
+        22 -> "PHP"
+        23 -> "PLN"
+        24 -> "RON"
+        25 -> "RUB"
+        26 -> "SEK"
+        27 -> "SGD"
+        28 -> "THB"
+        29 -> "TRY"
+        30 -> "TWD"
+        31 -> "USD"
+        32 -> "ZAR"
+        else -> "USD"
+    }
+}
+
+fun convertRatesByCurrencyCode(currencyCode: String, rates: Rates): Double {
     return when(currencyCode) {
 //        "AED" -> rates.aED
 //        "AFN" -> rates.aFN
@@ -262,12 +501,12 @@ fun convertByCurrencyCode(currencyCode: String, rates: Rates): Double {
 //        "BOB" -> rates.bOB
         "BRL" -> rates.bRL
 //        "BSD" -> rates.bSD
-        "BTC" -> rates.bTC
+//        "BTC" -> rates.bTC
 //        "BTN" -> rates.bTN
 //        "BWP" -> rates.bWP
 //        "BYN" -> rates.bYN
 //        "BZD" -> rates.bZD
-//        "CAD" -> rates.cAD
+        "CAD" -> rates.cAD
 //        "CDF" -> rates.cDF
         "CHF" -> rates.cHF
 //        "CLF" -> rates.cLF
@@ -410,7 +649,7 @@ fun convertByCurrencyCode(currencyCode: String, rates: Rates): Double {
         "ZAR" -> rates.zAR
 //        "ZMW" -> rates.zMW
 //        "ZWL" -> rates.zWL
-        else -> 0.00
+        else -> 1.00
     }
 }
 

@@ -48,8 +48,8 @@ data class Rates(
     val bRL: Double,
 //    @SerializedName("BSD")
 //    val bSD: Double,
-    @SerializedName("BTC")
-    val bTC: Double,
+//    @SerializedName("BTC")
+//    val bTC: Double,
 //    @SerializedName("BTN")
 //    val bTN: Double,
 //    @SerializedName("BWP")
@@ -58,8 +58,8 @@ data class Rates(
 //    val bYN: Double,
 //    @SerializedName("BZD")
 //    val bZD: Double,
-//    @SerializedName("CAD")
-//    val cAD: Double,
+    @SerializedName("CAD")
+    val cAD: Double,
 //    @SerializedName("CDF")
 //    val cDF: Double,
     @SerializedName("CHF")

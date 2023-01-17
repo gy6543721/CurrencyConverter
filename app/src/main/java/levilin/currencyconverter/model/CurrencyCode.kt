@@ -45,8 +45,8 @@ data class CurrencyCode(
     val bRL: String,
 //    @SerializedName("BSD")
 //    val bSD: String,
-    @SerializedName("BTC")
-    val bTC: String,
+//    @SerializedName("BTC")
+//    val bTC: String,
 //    @SerializedName("BTN")
 //    val bTN: String,
 //    @SerializedName("BWP")
@@ -55,8 +55,8 @@ data class CurrencyCode(
 //    val bYN: String,
 //    @SerializedName("BZD")
 //    val bZD: String,
-//    @SerializedName("CAD")
-//    val cAD: String,
+    @SerializedName("CAD")
+    val cAD: String,
 //    @SerializedName("CDF")
 //    val cDF: String,
     @SerializedName("CHF")
