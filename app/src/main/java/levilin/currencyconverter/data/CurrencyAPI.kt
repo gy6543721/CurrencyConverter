@@ -1,7 +1,6 @@
 package levilin.currencyconverter.data
 
 import levilin.currencyconverter.model.*
-import levilin.currencyconverter.utility.ConstantValue
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -15,7 +14,10 @@ interface CurrencyAPI {
 
     // Exchange Rate
     @GET("api/latest.json")
-    suspend fun getCurrencyExchangeRate(@QueryMap queries: Map<String, String>): Response<CurrencyData>
+    suspend fun getCurrencyExchangeRate(@QueryMap queries: Map<String, String>): Response<CurrencyExchangeRate>
 
+    // Exchange Rate Free
+    @GET("api/latest.json")
+    suspend fun getCurrencyExchangeRateFree(@Query("app_id") app_id: String): Response<CurrencyExchangeRate>
 
 }

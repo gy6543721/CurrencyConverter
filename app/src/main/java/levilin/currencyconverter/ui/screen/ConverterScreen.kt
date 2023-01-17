@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.launch
+import levilin.currencyconverter.BuildConfig
 import levilin.currencyconverter.R
 import levilin.currencyconverter.model.Rates
 import levilin.currencyconverter.ui.theme.*
@@ -63,6 +64,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
     val singleConvertedValue = remember { mutableStateOf("") }
 
     sharedViewModel.getCurrencyCode()
+    sharedViewModel.getCurrencyExchangeRateFree(ConstantValue.APP_ID)
 
     BottomSheetScaffold(
         sheetContent = {
@@ -81,7 +83,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                                 .clickable {
                                     fromCurrencyCode.value = item.currencyCode
                                     sharedViewModel.getCurrencyExchangeRate(
-                                        queries = provideQueries(fromCurrencyCode.value)
+                                        queries = provideQueries(base = fromCurrencyCode.value)
                                     )
                                     sharedViewModel.currencyExchangeRateResponse.observe(context as LifecycleOwner) { networkResult ->
 
@@ -233,7 +235,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
             LazyVerticalGrid(
                 cells = GridCells.Adaptive(100.dp),
                 content = {
-                    items(CURRENCY_LIST.size-1) { item ->
+                    items(9) { item ->
                         Box(
                             modifier = Modifier
                                 .padding(8.dp)
@@ -430,7 +432,7 @@ fun convertByCurrencyCode(currencyCode: String, rates: Rates): Double {
     }
 }
 
-fun provideQueries(input: String): Map<String, String> {
+fun provideQueries(base: String): Map<String, String> {
     val queries = HashMap<String, String>()
     queries.apply {
         this["app_id"] = ConstantValue.APP_ID

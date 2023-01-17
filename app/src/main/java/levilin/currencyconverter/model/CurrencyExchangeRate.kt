@@ -3,7 +3,7 @@ package levilin.currencyconverter.model
 
 import com.google.gson.annotations.SerializedName
 
-data class CurrencyData(
+data class CurrencyExchangeRate(
     @SerializedName("disclaimer")
     val disclaimer: String,
     @SerializedName("license")
