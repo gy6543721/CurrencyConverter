@@ -1,4 +1,4 @@
-package levilin.currencyconverter.data
+package levilin.currencyconverter.data.remote
 
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import javax.inject.Inject

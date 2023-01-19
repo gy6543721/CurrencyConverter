@@ -9,7 +9,6 @@ class ConstantValue {
 
         val CURRENCY_LIST = listOf(
             CurrencyItem("Australia", "AUD"),
-            CurrencyItem("BitCoin", "BTC"),
             CurrencyItem("Brazil", "BRL"),
             CurrencyItem("Bulgaria", "BGN"),
             CurrencyItem("Canada", "CAD"),

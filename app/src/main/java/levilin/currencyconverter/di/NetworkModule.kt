@@ -1,12 +1,10 @@
 package levilin.currencyconverter.di
 
-import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import levilin.currencyconverter.data.CurrencyAPI
-import levilin.currencyconverter.utility.CharSequenceTypeAdapter
+import levilin.currencyconverter.data.remote.CurrencyAPI
 import levilin.currencyconverter.utility.ConstantValue
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -47,7 +45,7 @@ object NetworkModule {
 
     @Singleton
     @Provides
-    fun provideAPI(retrofit: Retrofit):CurrencyAPI {
+    fun provideAPI(retrofit: Retrofit): CurrencyAPI {
         return retrofit.create(CurrencyAPI::class.java)
     }
 

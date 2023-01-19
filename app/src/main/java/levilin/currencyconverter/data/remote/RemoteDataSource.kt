@@ -1,13 +1,13 @@
-package levilin.currencyconverter.data
+package levilin.currencyconverter.data.remote
 
-import levilin.currencyconverter.model.CurrencyCode
-import levilin.currencyconverter.model.CurrencyExchangeRate
+import levilin.currencyconverter.model.remote.CountryName
+import levilin.currencyconverter.model.remote.CurrencyExchangeRate
 import retrofit2.Response
 import javax.inject.Inject
 
 class RemoteDataSource @Inject constructor(private val currencyAPI: CurrencyAPI) {
     // Currency Code
-    suspend fun getCurrencyCode(): Response<CurrencyCode> {
+    suspend fun getCurrencyCode(): Response<CountryName> {
         return currencyAPI.getCurrencyCode()
     }
 
