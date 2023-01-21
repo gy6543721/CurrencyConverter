@@ -2,30 +2,58 @@ package levilin.currencyconverter.data.local
 
 import android.content.Context
 import android.util.Log
+import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import levilin.currencyconverter.model.local.CurrencyItem
 import levilin.currencyconverter.model.local.CurrencyItemDAO
 
-//@Database(entities = [CurrencyItem::class], version = 1, exportSchema = false)
+@Database(entities = [CurrencyItem::class], version = 1, exportSchema = false)
 abstract class CurrencyItemDatabase : RoomDatabase() {
-    abstract fun currencyDataDAO(): CurrencyItemDAO
-}
+    abstract fun currencyItemDAO(): CurrencyItemDAO
 
-private lateinit var INSTANCE : CurrencyItemDatabase
+    companion object {
 
-fun getCurrencyItemDatabase(context: Context): CurrencyItemDatabase {
+        private lateinit var instance: CurrencyItemDatabase
+        private const val name = "CURRENCY_ITEMS_DATABASE.db"
 
-    synchronized(CurrencyItemDatabase::class.java) {
-        if (!::INSTANCE.isInitialized) {
-            INSTANCE = Room.databaseBuilder(
-                context.applicationContext,
-                CurrencyItemDatabase::class.java,
-                "currencyItemDatabase"
-            ).build()
+        fun getInstance(context: Context): CurrencyItemDatabase {
+            if (!::instance.isInitialized) {
+                instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    CurrencyItemDatabase::class.java,
+                    name
+                )
+                .fallbackToDestructiveMigration()
+                .build()
+            }
+
+            Log.d("TAG", "Database Build: $instance")
+
+            return instance
         }
     }
 
-    Log.d("TAG", "Database build")
-
-    return INSTANCE
+    fun getDAO(): CurrencyItemDAO {
+        return instance.currencyItemDAO()
+    }
 }
+
+//private lateinit var INSTANCE : CurrencyItemDatabase
+//
+//fun getCurrencyItemDatabase(context: Context): CurrencyItemDatabase {
+//
+//    synchronized(CurrencyItemDatabase::class.java) {
+//        if (!::INSTANCE.isInitialized) {
+//            INSTANCE = Room.databaseBuilder(
+//                context.applicationContext,
+//                CurrencyItemDatabase::class.java,
+//                "CURRENCY_ITEMS_DATABASE"
+//            ).build()
+//        }
+//    }
+//
+//    Log.d("TAG", "Database Build")
+//
+//    return INSTANCE
+//}

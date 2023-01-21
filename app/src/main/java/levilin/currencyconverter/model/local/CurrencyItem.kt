@@ -1,16 +1,26 @@
-package levilin.currencyconverter.model
+package levilin.currencyconverter.model.local
 
-import levilin.currencyconverter.model.remote.Rates
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import levilin.currencyconverter.model.remote.*
 import java.io.Serializable
 
-//@Entity
+@Entity(tableName = "CURRENCY_ITEMS")
 data class CurrencyItem(
-    val id: Int,
-    var countryName: String,
-    val currencyCode: String,
-    val currencyExchangeRate: Double,
-    var convertedValue: String,
-    var singleConvertedValue: String
+    @PrimaryKey
+    @ColumnInfo(name = "ID")
+    val id: Int = 0,
+    @ColumnInfo(name = "COUNTRY_NAME")
+    var countryName: String = "",
+    @ColumnInfo(name = "CURRENCY_CODE")
+    val currencyCode: String = "",
+    @ColumnInfo(name = "CURRENCY_EXCHANGE_RATE")
+    val currencyExchangeRate: Double = 0.00,
+    @ColumnInfo(name = "CONVERTED_VALUE")
+    var convertedValue: String = "",
+    @ColumnInfo(name = "SINGLE_CONVERTED_VALUE")
+    var singleConvertedValue: String = ""
 ): Serializable
 
 fun CurrencyItem.toOrderByCurrencyCode(): Int {

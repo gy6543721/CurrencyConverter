@@ -1,17 +1,30 @@
 package levilin.currencyconverter.model.local
 
-import androidx.lifecycle.LiveData
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import levilin.currencyconverter.model.CurrencyItem
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
+import levilin.currencyconverter.model.local.CurrencyItem
 
-//@Dao
+@Dao
 interface CurrencyItemDAO {
-//    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertItems(currencyItem: CurrencyItem)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertItem(currencyItem: CurrencyItem)
 
-//    @Query("SELECT * FROM CurrencyItem")
-    fun getAllDataSet(): LiveData<List<CurrencyItem>>
+    @Query("SELECT * FROM CURRENCY_ITEMS")
+    fun getAllItems(): Flow<List<CurrencyItem>>
+
+    @Query("SELECT * FROM CURRENCY_ITEMS WHERE ID LIKE :id")
+    fun findItemByID(id: Int): Flow<CurrencyItem>
+
+    @Query("SELECT * FROM CURRENCY_ITEMS WHERE COUNTRY_NAME LIKE :countryName")
+    fun findItemByCountryName(countryName: String): Flow<CurrencyItem>
+
+    @Query("SELECT * FROM CURRENCY_ITEMS WHERE CURRENCY_CODE LIKE :currencyCode")
+    fun findItemByCurrencyCode(currencyCode: String): Flow<CurrencyItem>
+
+    @Update
+    suspend fun updateItem(currencyItem: CurrencyItem)
+
+    @Delete
+    suspend fun deleteItem(currencyItem: CurrencyItem)
 
 }

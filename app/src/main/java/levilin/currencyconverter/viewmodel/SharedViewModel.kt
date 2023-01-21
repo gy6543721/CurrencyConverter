@@ -9,19 +9,22 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import levilin.currencyconverter.data.remote.Repository
-import levilin.currencyconverter.model.CurrencyItem
+import levilin.currencyconverter.data.local.LocalRepository
+import levilin.currencyconverter.data.remote.RemoteRepository
+import levilin.currencyconverter.model.local.CurrencyItem
 import levilin.currencyconverter.model.remote.*
 import levilin.currencyconverter.utility.*
 import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
-class SharedViewModel @Inject constructor(private val repository: Repository, application: Application, private val state: SavedStateHandle): AndroidViewModel(application) {
+class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRepository, private val localRepository: LocalRepository,application: Application): AndroidViewModel(application) {
     var countryNameResponse: MutableLiveData<NetworkResult<CountryName>> = MutableLiveData()
     var currencyExchangeRateResponse: MutableLiveData<NetworkResult<CurrencyExchangeRate>> = MutableLiveData()
 
@@ -33,7 +36,58 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
     // Local Data
     private var countryNameList = CountryName()
     private var currencyExchangeRateList = CurrencyExchangeRate()
+
     var currencyItemList: MutableLiveData<List<CurrencyItem>> = MutableLiveData()
+
+
+    // Room Database
+//    private val currencyItemsDatabase = CurrencyItemDatabase.getInstance(application.applicationContext)
+
+    private var _allLocalItems = MutableStateFlow<List<CurrencyItem>>(ArrayList())
+    var allLocalItems: StateFlow<List<CurrencyItem>> = _allLocalItems
+
+    private var _targetItem = MutableStateFlow(CurrencyItem())
+    var targetItem: StateFlow<CurrencyItem?> = _targetItem
+
+    init {
+        getAllItems()
+    }
+
+    private fun getAllItems() {
+        viewModelScope.launch(Dispatchers.IO) {
+            localRepository.getAllItems.collect() { itemList ->
+                _allLocalItems.value = itemList
+            }
+        }
+    }
+
+    private fun insertItem(currencyItem: CurrencyItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            localRepository.insertItem(currencyItem = currencyItem)
+            Log.d("TAG", "insertDatabase item ${currencyItem.countryName}")
+        }
+    }
+
+    private fun updateItem(currencyItem: CurrencyItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            localRepository.updateItem(currencyItem = currencyItem)
+        }
+    }
+
+    private fun deleteItem(currencyItem: CurrencyItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            localRepository.deleteItem(currencyItem = currencyItem)
+        }
+    }
+
+    private fun findItemByID(id: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            localRepository.findItemByID(id = id).collect() { targetItem ->
+                _targetItem.value = targetItem
+            }
+        }
+    }
+
 
     private fun checkInternetConnection(): Boolean {
         val connectivityManager = getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -106,8 +160,12 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
             getCountryName()
             getCurrencyExchangeRate(queries = provideQueriesFree())
             currencyItemList = MutableLiveData(initCurrencyItemList(countryName = countryNameList, currencyExchangeRate = currencyExchangeRateList))
+
+            // insert database
+            initCurrencyItemDatabase(countryName = countryNameList, currencyExchangeRate = currencyExchangeRateList)
         }
         Log.d("TAG", "currencyItemList: ${currencyItemList.value?.get(0)?.countryName}")
+
     }
 
     private fun getCountryName() {
@@ -127,7 +185,7 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
     private suspend fun getCountryNameSafeCall() {
         if (checkInternetConnection()) {
             try {
-                val response = repository.dataSource.getCurrencyCode()
+                val response = remoteRepository.dataSource.getCurrencyCode()
                 Log.d("TAG", "getCurrencyCodeSafeCall Response: ${response.code()}")
                 countryNameResponse.value = handleCountryNameResponse(response = response)
 
@@ -141,7 +199,7 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
 //                Log.d("TAG", "countryNameList: ${countryNameList.aUD}")
 
             } catch (e: Exception) {
-                countryNameResponse.value = NetworkResult.Error(message = repository.dataSource.getCurrencyCode().code().toString())
+                countryNameResponse.value = NetworkResult.Error(message = remoteRepository.dataSource.getCurrencyCode().code().toString())
             }
         } else {
             countryNameResponse.value = NetworkResult.Error(message = "No Internet Connection")
@@ -153,7 +211,7 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
     private suspend fun getCurrencyExchangeRateSafeCall(queries: Map<String, String>) {
         if (checkInternetConnection()) {
             try {
-                val response = repository.dataSource.getCurrencyExchangeRate(queries = queries)
+                val response = remoteRepository.dataSource.getCurrencyExchangeRate(queries = queries)
                 Log.d("TAG", "getCurrencyExchangeRateSafeCall Response: ${response.code()}")
                 currencyExchangeRateResponse.value = handleCurrencyExchangeRateResponse(response = response)
 
@@ -202,15 +260,6 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
         }
     }
 
-//    // Room DB
-//    fun insertCurrencyData(context: Context, model: CurrencyItem){
-//        GlobalScope.launch {
-//            getCurrencyDataDatabase(context = context).currencyDataDAO().insertItems(model)
-//        }
-//    }
-
-
-
     private fun initCountryName(countryName: CountryName): CountryName {
         return CountryName(
             aUD = countryName.aUD,
@@ -257,44 +306,52 @@ class SharedViewModel @Inject constructor(private val repository: Repository, ap
 
     private fun initCurrencyItemList(countryName: CountryName, currencyExchangeRate: CurrencyExchangeRate): List<CurrencyItem> {
         val resultList = ArrayList<CurrencyItem>()
-        val orderList = countryName.toOrder()
-        val currencyCodeList = countryName.toCurrencyCode()
+        val checkList = ArrayList<String>()
+        var index = 0
 
-        resultList.add(CurrencyItem(id = orderList.aUD.toInt(), countryName = countryName.aUD, currencyCode = currencyCodeList.aUD, currencyExchangeRate = currencyExchangeRate.rates.aUD, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.bGN.toInt(), countryName = countryName.bGN, currencyCode = currencyCodeList.bGN, currencyExchangeRate = currencyExchangeRate.rates.bGN, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.bRL.toInt(), countryName = countryName.bRL, currencyCode = currencyCodeList.bRL, currencyExchangeRate = currencyExchangeRate.rates.bRL, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.cAD.toInt(), countryName = countryName.cAD, currencyCode = currencyCodeList.cAD, currencyExchangeRate = currencyExchangeRate.rates.cAD, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.cHF.toInt(), countryName = countryName.cHF, currencyCode = currencyCodeList.cHF, currencyExchangeRate = currencyExchangeRate.rates.cHF, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.cNY.toInt(), countryName = countryName.cNY, currencyCode = currencyCodeList.cNY, currencyExchangeRate = currencyExchangeRate.rates.cNY, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.cZK.toInt(), countryName = countryName.cZK, currencyCode = currencyCodeList.cZK, currencyExchangeRate = currencyExchangeRate.rates.cZK, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.dKK.toInt(), countryName = countryName.dKK, currencyCode = currencyCodeList.dKK, currencyExchangeRate = currencyExchangeRate.rates.dKK, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.eUR.toInt(), countryName = countryName.eUR, currencyCode = currencyCodeList.eUR, currencyExchangeRate = currencyExchangeRate.rates.eUR, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.gBP.toInt(), countryName = countryName.gBP, currencyCode = currencyCodeList.gBP, currencyExchangeRate = currencyExchangeRate.rates.gBP, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.hKD.toInt(), countryName = countryName.hKD, currencyCode = currencyCodeList.hKD, currencyExchangeRate = currencyExchangeRate.rates.hKD, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.hRK.toInt(), countryName = countryName.hRK, currencyCode = currencyCodeList.hRK, currencyExchangeRate = currencyExchangeRate.rates.hRK, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.hUF.toInt(), countryName = countryName.hUF, currencyCode = currencyCodeList.hUF, currencyExchangeRate = currencyExchangeRate.rates.hUF, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.iDR.toInt(), countryName = countryName.iDR, currencyCode = currencyCodeList.iDR, currencyExchangeRate = currencyExchangeRate.rates.iDR, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.iNR.toInt(), countryName = countryName.iNR, currencyCode = currencyCodeList.iNR, currencyExchangeRate = currencyExchangeRate.rates.iNR, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.iSK.toInt(), countryName = countryName.iSK, currencyCode = currencyCodeList.iSK, currencyExchangeRate = currencyExchangeRate.rates.iSK, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.jPY.toInt(), countryName = countryName.jPY, currencyCode = currencyCodeList.jPY, currencyExchangeRate = currencyExchangeRate.rates.jPY, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.kRW.toInt(), countryName = countryName.kRW, currencyCode = currencyCodeList.kRW, currencyExchangeRate = currencyExchangeRate.rates.kRW, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.mXN.toInt(), countryName = countryName.mXN, currencyCode = currencyCodeList.mXN, currencyExchangeRate = currencyExchangeRate.rates.mXN, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.mYR.toInt(), countryName = countryName.mYR, currencyCode = currencyCodeList.mYR, currencyExchangeRate = currencyExchangeRate.rates.mYR, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.nOK.toInt(), countryName = countryName.nOK, currencyCode = currencyCodeList.nOK, currencyExchangeRate = currencyExchangeRate.rates.nOK, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.nZD.toInt(), countryName = countryName.nZD, currencyCode = currencyCodeList.nZD, currencyExchangeRate = currencyExchangeRate.rates.nZD, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.pHP.toInt(), countryName = countryName.pHP, currencyCode = currencyCodeList.pHP, currencyExchangeRate = currencyExchangeRate.rates.pHP, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.pLN.toInt(), countryName = countryName.pLN, currencyCode = currencyCodeList.pLN, currencyExchangeRate = currencyExchangeRate.rates.pLN, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.rON.toInt(), countryName = countryName.rON, currencyCode = currencyCodeList.rON, currencyExchangeRate = currencyExchangeRate.rates.rON, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.rUB.toInt(), countryName = countryName.rUB, currencyCode = currencyCodeList.rUB, currencyExchangeRate = currencyExchangeRate.rates.rUB, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.sEK.toInt(), countryName = countryName.sEK, currencyCode = currencyCodeList.sEK, currencyExchangeRate = currencyExchangeRate.rates.sEK, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.sGD.toInt(), countryName = countryName.sGD, currencyCode = currencyCodeList.sGD, currencyExchangeRate = currencyExchangeRate.rates.sGD, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.tHB.toInt(), countryName = countryName.tHB, currencyCode = currencyCodeList.tHB, currencyExchangeRate = currencyExchangeRate.rates.tHB, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.tRY.toInt(), countryName = countryName.tRY, currencyCode = currencyCodeList.tRY, currencyExchangeRate = currencyExchangeRate.rates.tRY, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.tWD.toInt(), countryName = countryName.tWD, currencyCode = currencyCodeList.tWD, currencyExchangeRate = currencyExchangeRate.rates.tWD, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.uSD.toInt(), countryName = countryName.uSD, currencyCode = currencyCodeList.uSD, currencyExchangeRate = currencyExchangeRate.rates.uSD, convertedValue = "", singleConvertedValue = ""))
-        resultList.add(CurrencyItem(id = orderList.zAR.toInt(), countryName = countryName.zAR, currencyCode = currencyCodeList.zAR, currencyExchangeRate = currencyExchangeRate.rates.zAR, convertedValue = "", singleConvertedValue = ""))
+        while (!checkList.contains(convertCurrencyCodeByOrder(index))) {
+            checkList.add(convertCurrencyCodeByOrder(index))
+            index ++
+            Log.d("TAG", "index $index")
+        }
+
+        for (i in 0 until index) {
+            val addCurrencyItem = CurrencyItem(
+                id = i,
+                countryName = convertCountryNameByOrder(order = i, countryName = countryName),
+                currencyCode = convertCurrencyCodeByOrder(i),
+                currencyExchangeRate = convertRatesByCurrencyCode(currencyCode = convertCurrencyCodeByOrder(index), rates = currencyExchangeRate.rates),
+                convertedValue = "",
+                singleConvertedValue = ""
+            )
+            resultList.add(addCurrencyItem)
+            Log.d("TAG", "initCurrencyItemList item $i: ${resultList[i].countryName}")
+        }
 
         return resultList
+    }
+
+    private fun initCurrencyItemDatabase(countryName: CountryName, currencyExchangeRate: CurrencyExchangeRate) {
+        val checkList = ArrayList<String>()
+        var index = 0
+
+        while (!checkList.contains(convertCurrencyCodeByOrder(index))) {
+            checkList.add(convertCurrencyCodeByOrder(index))
+            index ++
+            Log.d("TAG", "index $index")
+        }
+
+        for (i in 0 until index) {
+            val insertCurrencyItem = CurrencyItem(
+                id = i,
+                countryName = convertCountryNameByOrder(order = i, countryName = countryName),
+                currencyCode = convertCurrencyCodeByOrder(i),
+                currencyExchangeRate = convertRatesByCurrencyCode(currencyCode = convertCurrencyCodeByOrder(i), rates = currencyExchangeRate.rates),
+                convertedValue = "",
+                singleConvertedValue = ""
+            )
+            insertItem(currencyItem = insertCurrencyItem)
+        }
     }
 
     private fun provideQueriesFree(): Map<String, String> {

@@ -38,8 +38,7 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.launch
 import levilin.currencyconverter.R
-import levilin.currencyconverter.model.*
-import levilin.currencyconverter.model.remote.*
+import levilin.currencyconverter.model.local.CurrencyItem
 import levilin.currencyconverter.ui.theme.*
 import levilin.currencyconverter.utility.NetworkResult
 import levilin.currencyconverter.viewmodel.SharedViewModel
@@ -59,6 +58,9 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
 
     // init API data
     sharedViewModel.getCurrencyDataList()
+
+    val allLocalItems by sharedViewModel.allLocalItems.collectAsState()
+
 
     // Selection menu
     BottomSheetScaffold(
@@ -163,6 +165,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
+                    .focusRequester(focusRequester)
                     .clickable {
                         focusManager.clearFocus()
                         scope.launch {
@@ -183,6 +186,8 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
             // Convert Button
             Button(
                 onClick = {
+                    focusManager.clearFocus()
+
                     sharedViewModel.currencyExchangeRateResponse.observe(context as LifecycleOwner) { networkResult ->
                         when (networkResult) {
                             is NetworkResult.Success -> {
