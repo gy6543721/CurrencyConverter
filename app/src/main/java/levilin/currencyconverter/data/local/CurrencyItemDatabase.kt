@@ -28,9 +28,6 @@ abstract class CurrencyItemDatabase : RoomDatabase() {
                 .fallbackToDestructiveMigration()
                 .build()
             }
-
-            Log.d("TAG", "Database Build: ${instance.currencyItemDAO().getAllItems()}")
-
             return instance
         }
     }

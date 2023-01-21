@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -77,15 +76,17 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                                 .padding(vertical = 10.dp)
                                 .clickable {
                                     sharedViewModel.fromCurrencyCode.value = item.currencyCode
-                                    Log.d(
-                                        "TAG",
-                                        "sharedviewmodel fromcurrencycode: ${sharedViewModel.fromCurrencyCode.value}"
-                                    )
+
+//                                    Log.d(
+//                                        "TAG",
+//                                        "sharedviewmodel fromcurrencycode: ${sharedViewModel.fromCurrencyCode.value}"
+//                                    )
 
                                     scope.launch {
                                         scaffoldState.bottomSheetState.collapse()
                                     }
-                                }
+                                },
+                            color = MaterialTheme.colors.converterScreenTextColor
                         )
                     }
                 }
@@ -96,14 +97,14 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 Text(
                     text = stringResource(id = R.string.app_name),
                     fontSize = 24.sp,
-                    color = MaterialTheme.colors.converterScreenTextColor,
+                    color = MaterialTheme.colors.contentTextColor,
                     style = TextStyle(
                         fontWeight = FontWeight.Black,
                         fontSize = 30.sp
                     )
                 )
             },
-            backgroundColor = MaterialTheme.colors.converterScreenBackgroundColor,
+            backgroundColor = MaterialTheme.colors.boxBackgroundColor,
             elevation = 0.dp
         ) },
         scaffoldState = scaffoldState,
@@ -115,7 +116,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
         // Value Input Area
         Column(
             modifier = Modifier
-                .padding(start = 15.dp, end = 15.dp, top = 5.dp, bottom = 5.dp)
+                .padding(start = 15.dp, end = 15.dp, top = 15.dp, bottom = 5.dp)
                 .fillMaxWidth()
         ) {
             Row(
@@ -123,7 +124,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "Amount", color = MaterialTheme.colors.converterScreenTextColor)
+                Text(text = stringResource(id = R.string.value_input_header), color = MaterialTheme.colors.converterScreenTextColor)
                 Text(text = sharedViewModel.fromCurrencyCode.value, color = MaterialTheme.colors.converterScreenTextColor)
             }
 
@@ -133,13 +134,13 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 value = valueToConvert,
                 onValueChange = { input ->
                     sharedViewModel.valueToConvert.value = input
-                    Log.d("TAG", "sharedviewmodel valuetoconvert: ${sharedViewModel.valueToConvert.value}")
+//                    Log.d("TAG", "sharedviewmodel valuetoconvert: ${sharedViewModel.valueToConvert.value}")
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester),
                 placeholder = {
-                    Text(text = sharedViewModel.valueToConvert.value, style = MaterialTheme.typography.body1)
+                    Text(text = valueToConvert, style = MaterialTheme.typography.body1)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -157,7 +158,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 .padding(start = 15.dp, end = 15.dp, top = 5.dp, bottom = 5.dp)
                 .fillMaxWidth()
         ) {
-            Text(text = "From", color = MaterialTheme.colors.converterScreenTextColor)
+            Text(text = stringResource(id = R.string.from_currency_header), color = MaterialTheme.colors.converterScreenTextColor)
             Spacer(modifier = Modifier.padding(3.dp))
             Box(
                 modifier = Modifier
@@ -218,9 +219,10 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.boxBackgroundColor)
             ) {
-                Text("CONVERT", fontSize = 20.sp, color = Color.White)
+                Text(stringResource(id = R.string.convert_button_text), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.contentTextColor)
             }
         }
 
@@ -271,10 +273,10 @@ private fun GridItem(currencyItem: CurrencyItem, onItemClicked:(currencyItem: Cu
         shape = RoundedCornerShape(6.dp),
     ) {
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(text = currencyItem.countryName, fontSize = 10.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(text = "(${currencyItem.currencyCode})", fontSize = 10.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(modifier = Modifier.padding(5.dp))
-            Text(text = currencyItem.convertedValue, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(text = currencyItem.countryName, fontSize = 10.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colors.contentTextColor)
+            Text(text = "(${currencyItem.currencyCode})", fontSize = 10.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colors.contentTextColor)
+            Spacer(modifier = Modifier.padding(10.dp))
+            Text(text = currencyItem.convertedValue, fontSize = 10.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colors.contentTextColor)
         }
     }
 }

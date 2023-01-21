@@ -14,7 +14,6 @@ class LocalRepository @Inject constructor(private val currencyItemDAO: CurrencyI
 
     suspend fun insertItem(currencyItem: CurrencyItem) {
         currencyItemDAO.insertItem(currencyItem = currencyItem)
-        Log.d("TAG", "insert item to database: ${currencyItem.countryName}")
     }
     suspend fun updateItem(currencyItem: CurrencyItem) {
         currencyItemDAO.updateItem(currencyItem = currencyItem)

@@ -4,11 +4,11 @@ import androidx.compose.material.Colors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val LightBlue = Color(0xFFB6DFF3)
+val LightBlue = Color(0xFFC1E9FD)
 val Blue = Color(0xFF32A5DD)
-val DarkBlue = Color(0xFF058ACA)
+val DarkBlue = Color(0xFF033D5A)
 
-val LightGray = Color(0xFFFCFCFC)
+val LightGray = Color(0xFFFAFAFA)
 val MediumGray = Color(0xFF9C9C9C)
 val DarkGray = Color(0xFF5A5959)
 
@@ -27,8 +27,12 @@ val Colors.boxBorderColor: Color
 
 val Colors.boxBackgroundColor: Color
     @Composable
-    get() = if (isLight) Blue else LightBlue
+    get() = if (isLight) LightBlue else Blue
 
 val Colors.boxIconColor: Color
     @Composable
-    get() = if (isLight) MediumGray else MediumGray
+    get() = if (isLight) MediumGray else DarkGray
+
+val Colors.contentTextColor: Color
+    @Composable
+    get() = if (isLight) DarkBlue else LightGray

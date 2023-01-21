@@ -217,11 +217,11 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
         if (checkInternetConnection()) {
             try {
                 val response = remoteRepository.dataSource.getCurrencyExchangeRate(queries = queries)
-                Log.d("TAG", "getCurrencyExchangeRateSafeCall Response: ${response.code()}")
+//                Log.d("TAG", "getCurrencyExchangeRateSafeCall Response: ${response.code()}")
                 currencyExchangeRateResponse.value = handleCurrencyExchangeRateResponse(response = response)
                 currencyExchangeRateList = updateCurrencyExchangeRate(currencyExchangeRate = currencyExchangeRateResponse.value!!.data!!)
 
-                Log.d("TAG", "currencyExchangeRateList: ${currencyExchangeRateList.rates.aUD}")
+//                Log.d("TAG", "currencyExchangeRateList: ${currencyExchangeRateList.rates.aUD}")
 
             } catch (e: Exception) {
                 currencyExchangeRateResponse.value = NetworkResult.Error(message = e.localizedMessage)
@@ -325,7 +325,7 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
                 singleConvertedValue = ""
             )
             resultList.add(addCurrencyItem)
-            Log.d("TAG", "initCurrencyItemList item $i: ${resultList[i].countryName}")
+//            Log.d("TAG", "updateCurrencyItemList item $i: ${resultList[i].countryName}")
         }
 
         return resultList
