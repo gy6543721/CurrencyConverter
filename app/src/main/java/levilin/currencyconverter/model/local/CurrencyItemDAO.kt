@@ -2,7 +2,6 @@ package levilin.currencyconverter.model.local
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
-import levilin.currencyconverter.model.local.CurrencyItem
 
 @Dao
 interface CurrencyItemDAO {
@@ -26,5 +25,4 @@ interface CurrencyItemDAO {
 
     @Delete
     suspend fun deleteItem(currencyItem: CurrencyItem)
-
 }

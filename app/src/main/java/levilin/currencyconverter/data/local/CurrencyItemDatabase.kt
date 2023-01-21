@@ -14,6 +14,7 @@ abstract class CurrencyItemDatabase : RoomDatabase() {
 
     companion object {
 
+        @Volatile
         private lateinit var instance: CurrencyItemDatabase
         private const val name = "CURRENCY_ITEMS_DATABASE.db"
 
@@ -28,7 +29,7 @@ abstract class CurrencyItemDatabase : RoomDatabase() {
                 .build()
             }
 
-            Log.d("TAG", "Database Build: $instance")
+            Log.d("TAG", "Database Build: ${instance.currencyItemDAO().getAllItems()}")
 
             return instance
         }

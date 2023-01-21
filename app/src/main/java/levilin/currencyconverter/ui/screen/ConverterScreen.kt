@@ -56,11 +56,9 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    // init API data
-    sharedViewModel.getCurrencyDataList()
-
     val allLocalItems by sharedViewModel.allLocalItems.collectAsState()
-
+    val fromCurrencyCode by sharedViewModel.fromCurrencyCode
+    val valueToConvert by sharedViewModel.valueToConvert
 
     // Selection menu
     BottomSheetScaffold(
@@ -72,7 +70,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    items(sharedViewModel.currencyItemList.value!!) { item ->
+                    items(allLocalItems) { item ->
                         Text(
                             text = "${item.countryName}\t (${item.currencyCode})",
                             modifier = Modifier
@@ -114,7 +112,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
         sheetBackgroundColor = MaterialTheme.colors.converterScreenBackgroundColor,
         sheetShape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
     ) {
-        // Value Input
+        // Value Input Area
         Column(
             modifier = Modifier
                 .padding(start = 15.dp, end = 15.dp, top = 5.dp, bottom = 5.dp)
@@ -132,7 +130,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
             Spacer(modifier = Modifier.padding(3.dp))
 
             OutlinedTextField(
-                value = sharedViewModel.valueToConvert.value,
+                value = valueToConvert,
                 onValueChange = { input ->
                     sharedViewModel.valueToConvert.value = input
                     Log.d("TAG", "sharedviewmodel valuetoconvert: ${sharedViewModel.valueToConvert.value}")
@@ -153,7 +151,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
             )
         }
 
-        // Selection List
+        // Selection List Area
         Column(
             modifier = Modifier
                 .padding(start = 15.dp, end = 15.dp, top = 5.dp, bottom = 5.dp)
@@ -178,7 +176,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                         shape = RoundedCornerShape(5.dp)
                     )
             ) {
-                Text(text = sharedViewModel.fromCurrencyCode.value, modifier = Modifier.padding(10.dp), color = MaterialTheme.colors.converterScreenTextColor)
+                Text(text = fromCurrencyCode, modifier = Modifier.padding(10.dp), color = MaterialTheme.colors.converterScreenTextColor)
             }
 
             Spacer(modifier = Modifier.padding(15.dp))
@@ -193,6 +191,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                             is NetworkResult.Success -> {
                                 networkResult.data?.let { currencyData ->
                                     sharedViewModel.getExchangeRateResult(currencyData)
+                                    sharedViewModel.updateDatabase()
                                 }
                             }
                             is NetworkResult.Error -> {
@@ -234,9 +233,9 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
             LazyVerticalGrid(
                 cells = GridCells.Adaptive(100.dp),
                 content = {
-                    items(sharedViewModel.currencyItemList.value!!.size) { item ->
+                    items(allLocalItems.size) { item ->
                         GridItem(
-                            currencyItem = sharedViewModel.currencyItemList.value!![item],
+                            currencyItem = allLocalItems[item],
                             onItemClicked = { currencyItem->
                                 if (currencyItem.singleConvertedValue.isNotEmpty() && currencyItem.singleConvertedValue != "") {
                                     Toast.makeText(context, currencyItem.singleConvertedValue, Toast.LENGTH_SHORT).show()

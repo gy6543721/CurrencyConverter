@@ -28,21 +28,22 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
     var countryNameResponse: MutableLiveData<NetworkResult<CountryName>> = MutableLiveData()
     var currencyExchangeRateResponse: MutableLiveData<NetworkResult<CurrencyExchangeRate>> = MutableLiveData()
 
+    // input value from UI
     var fromCurrencyCode: MutableState<String> = mutableStateOf("USD")
     var valueToConvert: MutableState<String> = mutableStateOf("1.00")
+
+    // API raw data convert to output text
     private var convertedValue = mutableStateOf("")
     private var singleConvertedValue = mutableStateOf("")
 
-    // Local Data
+    // Arranged list that can be updated to currencyItemList
     private var countryNameList = CountryName()
     private var currencyExchangeRateList = CurrencyExchangeRate()
 
+    // Arranged list that can be updated to local database
     var currencyItemList: MutableLiveData<List<CurrencyItem>> = MutableLiveData()
 
-
-    // Room Database
-//    private val currencyItemsDatabase = CurrencyItemDatabase.getInstance(application.applicationContext)
-
+    // Local database data
     private var _allLocalItems = MutableStateFlow<List<CurrencyItem>>(ArrayList())
     var allLocalItems: StateFlow<List<CurrencyItem>> = _allLocalItems
 
@@ -51,6 +52,12 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
 
     init {
         getAllItems()
+        getCurrencyDataList()
+
+        // initialize arranged list to local database
+        if (_allLocalItems.value.isEmpty()) {
+            insertCurrencyItemDatabase()
+        }
     }
 
     private fun getAllItems() {
@@ -64,7 +71,6 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
     private fun insertItem(currencyItem: CurrencyItem) {
         viewModelScope.launch(Dispatchers.IO) {
             localRepository.insertItem(currencyItem = currencyItem)
-            Log.d("TAG", "insertDatabase item ${currencyItem.countryName}")
         }
     }
 
@@ -80,13 +86,33 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
         }
     }
 
-    private fun findItemByID(id: Int) {
+    private fun findItemByID(id: Int): CurrencyItem {
         viewModelScope.launch(Dispatchers.IO) {
             localRepository.findItemByID(id = id).collect() { targetItem ->
                 _targetItem.value = targetItem
             }
         }
+        return targetItem.value!!
     }
+
+    private fun findItemByCountryName(countryName: String): CurrencyItem {
+        viewModelScope.launch(Dispatchers.IO) {
+            localRepository.findItemByCountryName(countryName = countryName).collect() { targetItem ->
+                _targetItem.value = targetItem
+            }
+        }
+        return targetItem.value!!
+    }
+
+    private fun findItemByCurrencyCode(currencyCode: String): CurrencyItem {
+        viewModelScope.launch(Dispatchers.IO) {
+            localRepository.findItemByCurrencyCode(currencyCode = currencyCode).collect() { targetItem ->
+                _targetItem.value = targetItem
+            }
+        }
+        return targetItem.value!!
+    }
+
 
 
     private fun checkInternetConnection(): Boolean {
@@ -132,53 +158,41 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
                             valueToConvertDouble * toCurrencyValue / fromCurrencyValue
                         )
                     } ${convertCurrencyCodeByOrder(i)}"
-//                Log.d(
-//                    "TAG",
-//                    "SharedViewModel ConvertedValue: ${convertedValue.value}"
-//                )
 
                 singleConvertedValue.value =
-                    "1 ${convertCurrencyCodeByOrder(i)} = ${
-                        formattedResult(
-                            fromCurrencyValue / toCurrencyValue
-                        )
-                    } ${fromCurrencyCode.value}"
-//                Log.d(
-//                    "TAG",
-//                    "SharedViewModel SingleConvertedValue: ${singleConvertedValue.value}"
-//                )
+                    "1 ${convertCurrencyCodeByOrder(i)} = ${formattedResult(fromCurrencyValue / toCurrencyValue)} ${fromCurrencyCode.value}"
 
+                currencyItemList.value!![i].currencyExchangeRate = convertRatesByCurrencyCode(convertCurrencyCodeByOrder(i), currencyExchangeRate.rates)
                 currencyItemList.value!![i].convertedValue = convertedValue.value
                 currencyItemList.value!![i].singleConvertedValue = singleConvertedValue.value
-//                Log.d("TAG","SharedViewmodel ConvertedDataList: ${currencyItemList.value!![i].convertedValue}")
             }
         }
     }
 
-    fun getCurrencyDataList() {
+    private fun getCurrencyDataList() {
         viewModelScope.launch {
             getCountryName()
             getCurrencyExchangeRate(queries = provideQueriesFree())
-            currencyItemList = MutableLiveData(initCurrencyItemList(countryName = countryNameList, currencyExchangeRate = currencyExchangeRateList))
-
-            // insert database
-            initCurrencyItemDatabase(countryName = countryNameList, currencyExchangeRate = currencyExchangeRateList)
+            currencyItemList = MutableLiveData(updateCurrencyItemList(countryName = countryNameList, currencyExchangeRate = currencyExchangeRateList))
         }
-        Log.d("TAG", "currencyItemList: ${currencyItemList.value?.get(0)?.countryName}")
+    }
 
+    fun updateDatabase() {
+        viewModelScope.launch {
+            // update arranged list to local database
+            updateCurrencyItemDatabase()
+        }
     }
 
     private fun getCountryName() {
         viewModelScope.launch {
             getCountryNameSafeCall()
-            Log.d("TAG", "getCurrencyCode executed")
         }
     }
 
     private fun getCurrencyExchangeRate(queries: Map<String, String>) {
         viewModelScope.launch {
             getCurrencyExchangeRateSafeCall(queries = queries)
-            Log.d("TAG", "getCurrencyExchangeRate executed")
         }
     }
 
@@ -188,15 +202,7 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
                 val response = remoteRepository.dataSource.getCurrencyCode()
                 Log.d("TAG", "getCurrencyCodeSafeCall Response: ${response.code()}")
                 countryNameResponse.value = handleCountryNameResponse(response = response)
-
-                for (i in currencyItemList.value!!.indices) {
-                    currencyItemList.value!![i].countryName = convertCountryNameByOrder(order = i, countryName = countryNameResponse.value!!.data!!)
-                }
-
-                Log.d("TAG", "countryNameList: ${currencyItemList.value!![0].countryName}")
-
-                countryNameList = initCountryName(countryName = countryNameResponse.value!!.data!!)
-//                Log.d("TAG", "countryNameList: ${countryNameList.aUD}")
+                countryNameList = updateCountryName(countryName = countryNameResponse.value!!.data!!)
 
             } catch (e: Exception) {
                 countryNameResponse.value = NetworkResult.Error(message = remoteRepository.dataSource.getCurrencyCode().code().toString())
@@ -205,7 +211,6 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
             countryNameResponse.value = NetworkResult.Error(message = "No Internet Connection")
         }
 
-        Log.d("TAG", "CN Value: ${countryNameResponse.value?.data?.toString()}")
     }
 
     private suspend fun getCurrencyExchangeRateSafeCall(queries: Map<String, String>) {
@@ -214,12 +219,8 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
                 val response = remoteRepository.dataSource.getCurrencyExchangeRate(queries = queries)
                 Log.d("TAG", "getCurrencyExchangeRateSafeCall Response: ${response.code()}")
                 currencyExchangeRateResponse.value = handleCurrencyExchangeRateResponse(response = response)
+                currencyExchangeRateList = updateCurrencyExchangeRate(currencyExchangeRate = currencyExchangeRateResponse.value!!.data!!)
 
-//                for (i in currencyItemList.value!!.indices) {
-//                    currencyItemList.value!![i].currencyExchangeRate =
-//                }
-//
-                currencyExchangeRateList = initCurrencyExchangeRate(currencyExchangeRate = currencyExchangeRateResponse.value!!.data!!)
                 Log.d("TAG", "currencyExchangeRateList: ${currencyExchangeRateList.rates.aUD}")
 
             } catch (e: Exception) {
@@ -260,7 +261,7 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
         }
     }
 
-    private fun initCountryName(countryName: CountryName): CountryName {
+    private fun updateCountryName(countryName: CountryName): CountryName {
         return CountryName(
             aUD = countryName.aUD,
             bGN = countryName.bGN,
@@ -298,13 +299,13 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
         )
     }
 
-    private fun initCurrencyExchangeRate(currencyExchangeRate: CurrencyExchangeRate): CurrencyExchangeRate {
+    private fun updateCurrencyExchangeRate(currencyExchangeRate: CurrencyExchangeRate): CurrencyExchangeRate {
         return CurrencyExchangeRate(
             rates = currencyExchangeRate.rates
         )
     }
 
-    private fun initCurrencyItemList(countryName: CountryName, currencyExchangeRate: CurrencyExchangeRate): List<CurrencyItem> {
+    private fun updateCurrencyItemList(countryName: CountryName, currencyExchangeRate: CurrencyExchangeRate): List<CurrencyItem> {
         val resultList = ArrayList<CurrencyItem>()
         val checkList = ArrayList<String>()
         var index = 0
@@ -312,7 +313,6 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
         while (!checkList.contains(convertCurrencyCodeByOrder(index))) {
             checkList.add(convertCurrencyCodeByOrder(index))
             index ++
-            Log.d("TAG", "index $index")
         }
 
         for (i in 0 until index) {
@@ -331,31 +331,37 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
         return resultList
     }
 
-    private fun initCurrencyItemDatabase(countryName: CountryName, currencyExchangeRate: CurrencyExchangeRate) {
-        val checkList = ArrayList<String>()
-        var index = 0
-
-        while (!checkList.contains(convertCurrencyCodeByOrder(index))) {
-            checkList.add(convertCurrencyCodeByOrder(index))
-            index ++
-            Log.d("TAG", "index $index")
-        }
-
-        for (i in 0 until index) {
+    private fun insertCurrencyItemDatabase() {
+        for (i in currencyItemList.value!!.indices) {
             val insertCurrencyItem = CurrencyItem(
-                id = i,
-                countryName = convertCountryNameByOrder(order = i, countryName = countryName),
-                currencyCode = convertCurrencyCodeByOrder(i),
-                currencyExchangeRate = convertRatesByCurrencyCode(currencyCode = convertCurrencyCodeByOrder(i), rates = currencyExchangeRate.rates),
-                convertedValue = "",
-                singleConvertedValue = ""
+                id = currencyItemList.value!![i].id,
+                countryName = currencyItemList.value!![i].countryName,
+                currencyCode = currencyItemList.value!![i].currencyCode,
+                currencyExchangeRate = currencyItemList.value!![i].currencyExchangeRate,
+                convertedValue = currencyItemList.value!![i].convertedValue,
+                singleConvertedValue = currencyItemList.value!![i].singleConvertedValue
             )
             insertItem(currencyItem = insertCurrencyItem)
         }
     }
 
+    private fun updateCurrencyItemDatabase() {
+        for (i in currencyItemList.value!!.indices) {
+            val updateCurrencyItem = CurrencyItem(
+                id = currencyItemList.value!![i].id,
+                countryName = currencyItemList.value!![i].countryName,
+                currencyCode = currencyItemList.value!![i].currencyCode,
+                currencyExchangeRate = currencyItemList.value!![i].currencyExchangeRate,
+                convertedValue = currencyItemList.value!![i].convertedValue,
+                singleConvertedValue = currencyItemList.value!![i].singleConvertedValue
+            )
+            updateItem(currencyItem = updateCurrencyItem)
+        }
+    }
+
     private fun provideQueriesFree(): Map<String, String> {
         val queries = HashMap<String, String>()
+        // Only base:USD is provided in free plan
         queries.apply {
             this["app_id"] = ConstantValue.APP_ID
         }

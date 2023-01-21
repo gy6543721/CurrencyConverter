@@ -1,5 +1,6 @@
 package levilin.currencyconverter.data.local
 
+import android.util.Log
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.Flow
 import levilin.currencyconverter.model.local.CurrencyItem
@@ -13,6 +14,7 @@ class LocalRepository @Inject constructor(private val currencyItemDAO: CurrencyI
 
     suspend fun insertItem(currencyItem: CurrencyItem) {
         currencyItemDAO.insertItem(currencyItem = currencyItem)
+        Log.d("TAG", "insert item to database: ${currencyItem.countryName}")
     }
     suspend fun updateItem(currencyItem: CurrencyItem) {
         currencyItemDAO.updateItem(currencyItem = currencyItem)
@@ -25,11 +27,11 @@ class LocalRepository @Inject constructor(private val currencyItemDAO: CurrencyI
         return currencyItemDAO.findItemByID(id = id)
     }
 
-    suspend fun findItemByCountryName(countryName: String): Flow<CurrencyItem> {
+    fun findItemByCountryName(countryName: String): Flow<CurrencyItem> {
         return currencyItemDAO.findItemByCountryName(countryName = countryName)
     }
 
-    suspend fun findItemByCurrencyCode(currencyCode: String): Flow<CurrencyItem> {
+    fun findItemByCurrencyCode(currencyCode: String): Flow<CurrencyItem> {
         return currencyItemDAO.findItemByCurrencyCode(currencyCode = currencyCode)
     }
 }
