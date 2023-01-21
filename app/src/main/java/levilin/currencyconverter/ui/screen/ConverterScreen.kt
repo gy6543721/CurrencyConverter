@@ -35,12 +35,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import levilin.currencyconverter.R
 import levilin.currencyconverter.model.local.CurrencyItem
 import levilin.currencyconverter.ui.theme.*
 import levilin.currencyconverter.utility.NetworkResult
 import levilin.currencyconverter.viewmodel.SharedViewModel
+import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalMaterialApi
 @ExperimentalFoundationApi
@@ -55,9 +57,21 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
+    // SharedViewModel Data
     val allLocalItems by sharedViewModel.allLocalItems.collectAsState()
     val fromCurrencyCode by sharedViewModel.fromCurrencyCode
     val valueToConvert by sharedViewModel.valueToConvert
+    val rawAPICurrencyExchangeRate by sharedViewModel.rawAPICurrencyExchangeRate
+
+    // Timer
+    var timer by remember { mutableStateOf(0) }
+    var updateFlag by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        while(true) {
+            delay(1.seconds)
+            timer++
+        }
+    }
 
     // Selection menu
     BottomSheetScaffold(
@@ -187,34 +201,35 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 onClick = {
                     focusManager.clearFocus()
 
-                    sharedViewModel.currencyExchangeRateResponse.observe(context as LifecycleOwner) { networkResult ->
-                        when (networkResult) {
-                            is NetworkResult.Success -> {
-                                networkResult.data?.let { currencyData ->
-                                    sharedViewModel.getExchangeRateResult(currencyData)
-                                    sharedViewModel.updateDatabase()
+                    if (timer > 30 * 60) {
+                        updateFlag = true
+                    }
+
+                    if (updateFlag) {
+                        sharedViewModel.currencyExchangeRateResponse.observe(context as LifecycleOwner) { networkResult ->
+                            when (networkResult) {
+                                is NetworkResult.Success -> {
+                                    networkResult.data?.let { currencyData ->
+                                        // Update every 30min
+                                        sharedViewModel.rawAPICurrencyExchangeRate.value = currencyData
+                                        sharedViewModel.getExchangeRateResult(rawAPICurrencyExchangeRate)
+                                        sharedViewModel.updateDatabase()
+                                        timer = 0
+                                        updateFlag = false
+                                    }
+                                }
+                                is NetworkResult.Error -> {
+                                    Toast.makeText(context, networkResult.message, Toast.LENGTH_SHORT).show()
+                                    Log.d("TAG", "Error: ${networkResult.message}")
+                                }
+                                is NetworkResult.Loading -> {
+                                    Toast.makeText(context, "Loading...", Toast.LENGTH_SHORT).show()
                                 }
                             }
-                            is NetworkResult.Error -> {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        networkResult.message,
-                                        Toast.LENGTH_SHORT
-                                    )
-                                    .show()
-                                Log.d("TAG", "Error: ${networkResult.message}")
-                            }
-                            is NetworkResult.Loading -> {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        "Loading...",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                    .show()
-                            }
                         }
+                    } else {
+                        sharedViewModel.getExchangeRateResult(rawAPICurrencyExchangeRate)
+                        sharedViewModel.updateDatabase()
                     }
                 },
                 modifier = Modifier

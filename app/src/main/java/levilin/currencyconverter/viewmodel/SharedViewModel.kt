@@ -32,6 +32,9 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
     var fromCurrencyCode: MutableState<String> = mutableStateOf("USD")
     var valueToConvert: MutableState<String> = mutableStateOf("1.00")
 
+    // Raw Data from API (update every 30 min)
+    var rawAPICurrencyExchangeRate: MutableState<CurrencyExchangeRate> = mutableStateOf(CurrencyExchangeRate())
+
     // API raw data convert to output text
     private var convertedValue = mutableStateOf("")
     private var singleConvertedValue = mutableStateOf("")

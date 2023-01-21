@@ -1,7 +1,5 @@
 package levilin.currencyconverter.model.remote
 
-
-import androidx.room.Entity
 import com.google.gson.annotations.SerializedName
 
 // Over 127 args will reach Kotlin limit and cause error.
