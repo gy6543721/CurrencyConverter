@@ -111,44 +111,6 @@ fun Rates.toCurrencyCode(): CountryName {
     )
 }
 
-fun Rates.toOrder(): CountryName {
-    return CountryName(
-        aUD = "0",
-        bGN = "1",
-        bRL = "2",
-        cAD = "3",
-        cHF = "4",
-        cNY = "5",
-        cZK = "6",
-        dKK = "7",
-        eUR = "8",
-        gBP = "9",
-        hKD = "10",
-        hRK = "11",
-        hUF = "12",
-        iDR = "13",
-        iNR = "14",
-        iSK = "15",
-        jPY = "16",
-        kRW = "17",
-        mXN = "18",
-        mYR = "19",
-        nOK = "20",
-        nZD = "21",
-        pHP = "22",
-        pLN = "23",
-        rON = "24",
-        rUB = "25",
-        sEK = "26",
-        sGD = "27",
-        tHB = "28",
-        tRY = "29",
-        tWD = "30",
-        uSD = "31",
-        zAR = "32"
-    )
-}
-
 fun Rates(): Rates {
     return Rates(
         aUD = 0.00,

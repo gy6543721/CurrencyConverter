@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.*
@@ -27,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -78,7 +80,8 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
         sheetContent = {
             Box(modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)) {
+                .height(250.dp)
+            ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -91,10 +94,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                                 .clickable {
                                     sharedViewModel.fromCurrencyCode.value = item.currencyCode
 
-//                                    Log.d(
-//                                        "TAG",
-//                                        "sharedviewmodel fromcurrencycode: ${sharedViewModel.fromCurrencyCode.value}"
-//                                    )
+//                                    Log.d("TAG", "sharedviewmodel fromcurrencycode: ${sharedViewModel.fromCurrencyCode.value}")
 
                                     scope.launch {
                                         scaffoldState.bottomSheetState.collapse()
@@ -152,14 +152,18 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(focusRequester),
+                    .focusRequester(focusRequester)
+                    .testTag(stringResource(id = R.string.test_input_value_textField)),
                 placeholder = {
                     Text(text = valueToConvert, style = MaterialTheme.typography.body1)
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                ),
                 singleLine = true,
                 trailingIcon = {
-                    IconButton(onClick = { sharedViewModel.valueToConvert.value = "" }) {
+                    IconButton(onClick = { sharedViewModel.valueToConvert.value = "" }, modifier = Modifier.testTag(stringResource(id = R.string.test_clear_value_textField))) {
                         Icon(modifier = Modifier.alpha(ContentAlpha.medium), imageVector = Icons.Filled.Close, contentDescription = stringResource(id = R.string.trail_icon_text), tint = MaterialTheme.colors.boxIconColor)
                     }
                 }
@@ -172,7 +176,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                 .padding(start = 15.dp, end = 15.dp, top = 5.dp, bottom = 5.dp)
                 .fillMaxWidth()
         ) {
-            Text(text = stringResource(id = R.string.from_currency_header), color = MaterialTheme.colors.converterScreenTextColor)
+            Text(text = stringResource(id = R.string.from_currency_header), color = MaterialTheme.colors.converterScreenTextColor, modifier = Modifier.testTag(stringResource(id = R.string.test_from_currency_area)))
             Spacer(modifier = Modifier.padding(3.dp))
             Box(
                 modifier = Modifier
@@ -190,8 +194,9 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                         color = MaterialTheme.colors.boxBorderColor,
                         shape = RoundedCornerShape(5.dp)
                     )
+                    .testTag(stringResource(id = R.string.test_selection_list))
             ) {
-                Text(text = fromCurrencyCode, modifier = Modifier.padding(10.dp), color = MaterialTheme.colors.converterScreenTextColor)
+                Text(text = fromCurrencyCode, modifier = Modifier.padding(10.dp).testTag(stringResource(id = R.string.test_selection_list_item)), color = MaterialTheme.colors.converterScreenTextColor)
             }
 
             Spacer(modifier = Modifier.padding(15.dp))
@@ -210,7 +215,7 @@ fun ConverterScreen(context: Context, sharedViewModel: SharedViewModel) {
                             when (networkResult) {
                                 is NetworkResult.Success -> {
                                     networkResult.data?.let { currencyData ->
-                                        // Update every 30min
+                                        // Update when timer reach 30min
                                         sharedViewModel.rawAPICurrencyExchangeRate.value = currencyData
                                         sharedViewModel.getExchangeRateResult(rawAPICurrencyExchangeRate)
                                         sharedViewModel.updateDatabase()

@@ -1,10 +1,8 @@
 package levilin.currencyconverter.data.local
 
-import android.util.Log
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.Flow
 import levilin.currencyconverter.model.local.CurrencyItem
-import levilin.currencyconverter.model.local.CurrencyItemDAO
 import javax.inject.Inject
 
 @ViewModelScoped

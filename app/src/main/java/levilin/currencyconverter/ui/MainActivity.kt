@@ -16,13 +16,6 @@ import levilin.currencyconverter.viewmodel.SharedViewModel
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-//    @Inject
-//    private lateinit var databaseRepository: LocalRepository
-//    @Inject
-//    private lateinit var currencyItemEntity: CurrencyItem
-
-//    private lateinit var sharedViewModel: SharedViewModel
-
     private val sharedViewModel: SharedViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {

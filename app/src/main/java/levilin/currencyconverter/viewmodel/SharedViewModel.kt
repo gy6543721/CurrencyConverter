@@ -24,11 +24,12 @@ import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
-class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRepository, private val localRepository: LocalRepository,application: Application): AndroidViewModel(application) {
+class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRepository, private val localRepository: LocalRepository, application: Application): AndroidViewModel(application) {
+    // API response
     var countryNameResponse: MutableLiveData<NetworkResult<CountryName>> = MutableLiveData()
     var currencyExchangeRateResponse: MutableLiveData<NetworkResult<CurrencyExchangeRate>> = MutableLiveData()
 
-    // input value from UI
+    // Input value from UI
     var fromCurrencyCode: MutableState<String> = mutableStateOf("USD")
     var valueToConvert: MutableState<String> = mutableStateOf("1.00")
 
@@ -116,8 +117,6 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
         return targetItem.value!!
     }
 
-
-
     private fun checkInternetConnection(): Boolean {
         val connectivityManager = getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetwork ?: return false
@@ -202,13 +201,13 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
     private suspend fun getCountryNameSafeCall() {
         if (checkInternetConnection()) {
             try {
-                val response = remoteRepository.dataSource.getCurrencyCode()
+                val response = remoteRepository.remoteDataSource.getCurrencyCode()
                 Log.d("TAG", "getCurrencyCodeSafeCall Response: ${response.code()}")
                 countryNameResponse.value = handleCountryNameResponse(response = response)
                 countryNameList = updateCountryName(countryName = countryNameResponse.value!!.data!!)
 
             } catch (e: Exception) {
-                countryNameResponse.value = NetworkResult.Error(message = remoteRepository.dataSource.getCurrencyCode().code().toString())
+                countryNameResponse.value = NetworkResult.Error(message = remoteRepository.remoteDataSource.getCurrencyCode().code().toString())
             }
         } else {
             countryNameResponse.value = NetworkResult.Error(message = "No Internet Connection")
@@ -219,8 +218,8 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
     private suspend fun getCurrencyExchangeRateSafeCall(queries: Map<String, String>) {
         if (checkInternetConnection()) {
             try {
-                val response = remoteRepository.dataSource.getCurrencyExchangeRate(queries = queries)
-//                Log.d("TAG", "getCurrencyExchangeRateSafeCall Response: ${response.code()}")
+                val response = remoteRepository.remoteDataSource.getCurrencyExchangeRate(queries = queries)
+                Log.d("TAG", "getCurrencyExchangeRateSafeCall Response: ${response.code()}")
                 currencyExchangeRateResponse.value = handleCurrencyExchangeRateResponse(response = response)
                 currencyExchangeRateList = updateCurrencyExchangeRate(currencyExchangeRate = currencyExchangeRateResponse.value!!.data!!)
 
@@ -330,7 +329,6 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
             resultList.add(addCurrencyItem)
 //            Log.d("TAG", "updateCurrencyItemList item $i: ${resultList[i].countryName}")
         }
-
         return resultList
     }
 

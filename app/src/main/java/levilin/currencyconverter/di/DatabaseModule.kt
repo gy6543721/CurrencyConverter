@@ -8,7 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import levilin.currencyconverter.data.local.CurrencyItemDatabase
 import levilin.currencyconverter.model.local.CurrencyItem
-import levilin.currencyconverter.model.local.CurrencyItemDAO
+import levilin.currencyconverter.data.local.CurrencyItemDAO
 import javax.inject.Singleton
 
 @Module
@@ -21,7 +21,7 @@ object DatabaseModule {
 
     @Singleton
     @Provides
-    fun provideDAO(currencyItemDatabase: CurrencyItemDatabase):CurrencyItemDAO = currencyItemDatabase.getDAO()
+    fun provideDAO(currencyItemDatabase: CurrencyItemDatabase): CurrencyItemDAO = currencyItemDatabase.getDAO()
 
     @Singleton
     @Provides

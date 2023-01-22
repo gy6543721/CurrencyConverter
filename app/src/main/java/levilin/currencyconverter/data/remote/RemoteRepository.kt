@@ -5,5 +5,5 @@ import javax.inject.Inject
 
 @ActivityRetainedScoped
 class RemoteRepository @Inject constructor(remoteDataSource: RemoteDataSource) {
-    val dataSource = remoteDataSource
+    val remoteDataSource = remoteDataSource
 }

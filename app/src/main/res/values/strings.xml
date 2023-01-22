@@ -5,4 +5,11 @@
     <string name="value_input_header">Currency Value</string>
     <string name="from_currency_header">From</string>
     <string name="convert_button_text">CONVERT</string>
+
+    // TestTag
+    <string name="test_input_value_textField">test_input_value_textField</string>
+    <string name="test_clear_value_textField">test_clear_value_textField</string>
+    <string name="test_from_currency_area">test_from_currency_area</string>
+    <string name="test_selection_list">test_selection_list</string>
+    <string name="test_selection_list_item">test_selection_list_item</string>
 </resources>
