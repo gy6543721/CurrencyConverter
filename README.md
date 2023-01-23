@@ -1,11 +1,11 @@
 # Currency Converter
 
-##[Funtional Requirement]  
+## [Funtional Requirement]  
 Implement all the requirements and UI suggestion with MVVM structure, support Dark Mode.  
 Please refer to demo video if necessary → [Demo Video](https://youtu.be/O8s3Bd3pNNM)  
 <br>
 
-##[Unit Test]  
+## [Unit Test]  
 Implement JUnit Compose Test.  
 (Due to limited time, it is difficult to implement detail cases)  
 Have checked that Logs are all fine in app classes related to each feature.  
