@@ -49,7 +49,7 @@ class SharedViewModelTest {
     @Test
     fun `Test fakeRemoteRepository getCurrencyCode()`() = runBlocking {
         val expected = 200
-        var actual = fakeRemoteRepository.remoteDataSource.getCurrencyCode().code()
+        val actual = fakeRemoteRepository.remoteDataSource.getCurrencyCode().code()
         assert(expected == actual)
     }
 
@@ -58,7 +58,7 @@ class SharedViewModelTest {
         val query = HashMap<String, String>()
         query["Test"] = "Test"
         val expected = 200
-        var actual = fakeRemoteRepository.remoteDataSource.getCurrencyExchangeRate(queries = query).code()
+        val actual = fakeRemoteRepository.remoteDataSource.getCurrencyExchangeRate(queries = query).code()
         assert(expected == actual)
     }
 }

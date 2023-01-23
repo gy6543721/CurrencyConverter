@@ -155,11 +155,7 @@ class SharedViewModel @Inject constructor(private val remoteRepository: RemoteRe
                     )
 
                 convertedValue.value =
-                    "${valueToConvert.value} ${fromCurrencyCode.value} = ${
-                        formattedResult(
-                            valueToConvertDouble * toCurrencyValue / fromCurrencyValue
-                        )
-                    } ${convertCurrencyCodeByOrder(i)}"
+                    "${valueToConvert.value} ${fromCurrencyCode.value} = ${formattedResult(valueToConvertDouble * toCurrencyValue / fromCurrencyValue)} ${convertCurrencyCodeByOrder(i)}"
 
                 singleConvertedValue.value =
                     "1 ${convertCurrencyCodeByOrder(i)} = ${formattedResult(fromCurrencyValue / toCurrencyValue)} ${fromCurrencyCode.value}"
