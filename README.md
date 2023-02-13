@@ -1,5 +1,7 @@
 # Currency Converter
 
+[Demo Video](https://youtu.be/O8s3Bd3pNNM)  
+
 ## [Goal]
 
 #### Develop a Currency Conversion App that allows a user view exchange rates for any given currency
@@ -24,26 +26,7 @@
 
 ![UI Suggested Wireframe](ui_suggestion.png)
 
-### What we're looking for:
-- [ ] An App that meets the Functional Requirements above
-- [ ] Your coding style! Show us how you like to write your code
-- [ ] Architecture, how you've structured your code
-- [ ] Principles, how you belive code should be written
-- [ ] Qualities, how you guarantee your code is functioning
 
-
-
-## [Funtional Requirement]  
-Implement all the requirements and UI suggestion with MVVM structure, support Dark Mode.  
-Please refer to demo video if necessary → [Demo Video](https://youtu.be/O8s3Bd3pNNM)  
-<br>
-
-## [Unit Test]  
-Implement JUnit Compose Test.  
-(Due to limited time, it is unlikely to include detail cases)  
-Have checked that Logs are all fine in app classes related to each feature.  
-Also, have checked that the whole app passes End-to-End Test.  
-<br>
 
 # Main Libraries Used
 * Compose
